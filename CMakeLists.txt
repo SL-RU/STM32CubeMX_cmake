@@ -43,9 +43,12 @@ set(OPT "-O0")
 set(USER_LINKER_FLAGS "-u _printf_float")
 set(USER_CFLAGS "")
 
+#You cam add your own defenitions
 add_definitions(-DIS_STM32=1)
 #add_definitions(-DYour_defenition=here)
 
+#generate compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 #USER END
 
 #CMAKE
