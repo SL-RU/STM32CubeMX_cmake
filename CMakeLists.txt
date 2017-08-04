@@ -88,7 +88,7 @@ set(cubemx_dir ${CMAKE_CURRENT_LIST_DIR})
 message("CubeMX dir: " ${cubemx_dir})
 string(REPLACE " " "" cubemx_dir ${cubemx_dir})
 execute_process(COMMAND bash "-c"
-  "python ${cubemx_dir}/CubeMX2_cmake.py ${cubemx_dir}"
+  "python3 ${cubemx_dir}/CubeMX2_cmake.py ${cubemx_dir}"
   OUTPUT_VARIABLE cubemx_conf
   RESULT_VARIABLE cubemx_res
   ERROR_VARIABLE  cubemx_err)
