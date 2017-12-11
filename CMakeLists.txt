@@ -126,14 +126,16 @@ project(${STM32_PRJ_NAME})
 
 #find and add all headers & sources & asm to target
 MACRO(HEADER_DIRECTORIES return_list)
-    FILE(GLOB_RECURSE new_list *.h)
-    SET(dir_list "")
-    FOREACH(file_path ${new_list})
-        GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
-        SET(dir_list ${dir_list} ${dir_path})
-    ENDFOREACH()
-    LIST(REMOVE_DUPLICATES dir_list)
-    SET(${return_list} ${dir_list})
+  FILE(GLOB_RECURSE new_list *.h)
+  FILE(GLOB_RECURSE new_list_pp *.hpp)
+  set(new_list ${new_list} ${new_list_pp})
+  SET(dir_list "")
+  FOREACH(file_path ${new_list})
+    GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
+    SET(dir_list ${dir_list} ${dir_path})
+  ENDFOREACH()
+  LIST(REMOVE_DUPLICATES dir_list)
+  SET(${return_list} ${dir_list})
 ENDMACRO()
 
 #HEADERS
@@ -141,11 +143,25 @@ header_directories(INC)
 include_directories(${INC})
 
 #SOURCES
-file(GLOB_RECURSE SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.c)
-string(REGEX REPLACE "[^;]*CMakeFiles/[^;]+;?" "" SRC "${SRC}")
+file(GLOB_RECURSE SRC
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*.c")
+string(REGEX
+  REPLACE "[^;]*CMakeFiles/[^;]+;?" ""
+  SRC "${SRC}")
+file(GLOB_RECURSE SRC_pp
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*.cpp")
+string(REGEX
+  REPLACE "[^;]*CMakeFiles/[^;]+;?" ""
+  SRC_pp "${SRC_pp}")
+
+set(SRC ${SRC} ${SRC_pp})
 
 #ASSEMBLER files
-file(GLOB_RECURSE asm_SRC "*.s")
+file(GLOB_RECURSE asm_SRC
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*.s")
 set_source_files_properties(${asm_SRC} "-x assembler-with-cpp")
 
 #list all files
