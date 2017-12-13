@@ -39,7 +39,7 @@
 
 #USER CUSTOM SETTINGS
 #You can change values here. It's not recommended to change whole script
-set(OPT "-O0")
+set(OPT "-Ofast")
 set(USER_LINKER_FLAGS "-u _printf_float")
 set(USER_CFLAGS "")
 
@@ -49,10 +49,18 @@ add_definitions(-DIS_STM32=1)
 
 #generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+
+set(sub_dirs "")
+set(libs "")
+#Add subdirectories
+#set(sub_dirs ${sub_dirs} "test/")
+#Libraries to link
+#set(libs ${libs} "Test")
+
 #USER END
 
 #CMAKE
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.3)
 include(CMakeForceCompiler)
 
 # Targeting an embedded system, not OS.
@@ -88,7 +96,7 @@ set(cubemx_dir ${CMAKE_CURRENT_LIST_DIR})
 message("CubeMX dir: " ${cubemx_dir})
 string(REPLACE " " "" cubemx_dir ${cubemx_dir})
 execute_process(COMMAND bash "-c"
-  "python ${cubemx_dir}/CubeMX2_cmake.py ${cubemx_dir}"
+  "python3 ${cubemx_dir}/CubeMX2_cmake.py ${cubemx_dir}"
   OUTPUT_VARIABLE cubemx_conf
   RESULT_VARIABLE cubemx_res
   ERROR_VARIABLE  cubemx_err)
@@ -101,6 +109,31 @@ endif()
 foreach(i ${cubemx_conf})
   message(${i})
 endforeach()
+
+#Read ignore list
+IF(EXISTS "${cubemx_dir}/CMakeIgnore.txt")
+  message("Ignore file exists")
+  FILE(READ "CMakeIgnore.txt" ignore_s)
+  STRING(REGEX REPLACE ";" "\\\\;" ignore_s "${ignore_s}")
+  STRING(REGEX REPLACE "\n" ";" ignore_s "${ignore_s}")
+  set(ignore "")
+  FOREACH(iss ${ignore_s})
+    IF(NOT ${iss} EQUAL "")
+      set(ignore ${ignore} "${iss}")
+    ENDIF()
+  ENDFOREACH()
+ELSE()
+  set(ignore "")
+ENDIF()
+#ignore subdirs
+FOREACH(iss ${sub_dirs})
+  IF(NOT ${iss} EQUAL "")
+    set(ignore ${ignore} "${iss}")
+    #add subdir
+    add_subdirectory ("${iss}")
+  ENDIF()
+ENDFOREACH()
+#message(${ignore})
 
 list(GET cubemx_conf 0 STM32_PRJ_NAME     )
 list(GET cubemx_conf 1 STM32_PRJ_CFLAGS   )
@@ -126,42 +159,70 @@ project(${STM32_PRJ_NAME})
 
 #find and add all headers & sources & asm to target
 MACRO(HEADER_DIRECTORIES return_list)
-  FILE(GLOB_RECURSE new_list *.h)
-  FILE(GLOB_RECURSE new_list_pp *.hpp)
+  FILE(GLOB_RECURSE new_list
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
+  FILE(GLOB_RECURSE new_list_pp
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp)
   set(new_list ${new_list} ${new_list_pp})
   SET(dir_list "")
   FOREACH(file_path ${new_list})
     GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
-    SET(dir_list ${dir_list} ${dir_path})
+    set(f 1)
+    FOREACH(iss ${ignore})
+      IF(NOT ${dir_path} STREQUAL "") #path is empyt
+	string(REGEX MATCH "^${iss}.*$" ouu ${dir_path})
+	IF(NOT ${ouu} STREQUAL "")
+	  set(f 0)
+	ENDIF()
+      ELSE() #path is empty
+	set(f 0)
+      ENDIF()
+    ENDFOREACH()
+    IF(${f} EQUAL 1)
+      #MESSAGE("Header +" ${dir_path})
+      SET(dir_list ${dir_list} ${dir_path})
+    ENDIF()
   ENDFOREACH()
   LIST(REMOVE_DUPLICATES dir_list)
   SET(${return_list} ${dir_list})
 ENDMACRO()
+
+MACRO(SRC_FILES_ALL return_list ext)
+  FILE(GLOB_RECURSE new_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${ext}")
+  SET(file_list "")
+  FOREACH(file_path ${new_list})
+    set(f 1)
+    FOREACH(iss ${ignore})
+      IF(NOT ${file_path} STREQUAL "") #is path empty
+	string(REGEX MATCH "^${iss}.*$" ouu ${file_path})
+	IF(NOT ${ouu} STREQUAL "")
+	  set(f 0)
+	ENDIF()
+      ELSE() #path is empty	
+	set(f 0)
+      ENDIF()
+    ENDFOREACH()
+    IF(${f} EQUAL 1)
+      #MESSAGE("src +" ${file_path})
+      SET(file_list ${file_list} ${file_path})
+    ENDIF()
+  ENDFOREACH()
+  LIST(REMOVE_DUPLICATES file_list)
+  SET(${return_list} ${file_list})
+ENDMACRO()
+
 
 #HEADERS
 header_directories(INC)
 include_directories(${INC})
 
 #SOURCES
-file(GLOB_RECURSE SRC
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  "*.c")
-string(REGEX
-  REPLACE "[^;]*CMakeFiles/[^;]+;?" ""
-  SRC "${SRC}")
-file(GLOB_RECURSE SRC_pp
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  "*.cpp")
-string(REGEX
-  REPLACE "[^;]*CMakeFiles/[^;]+;?" ""
-  SRC_pp "${SRC_pp}")
-
+src_files_all(SRC "*.c")
+src_files_all(SRC_pp "*.cpp") 
 set(SRC ${SRC} ${SRC_pp})
 
 #ASSEMBLER files
-file(GLOB_RECURSE asm_SRC
-  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  "*.s")
+src_files_all(asm_SRC "*.s")
 set_source_files_properties(${asm_SRC} "-x assembler-with-cpp")
 
 #list all files
@@ -182,21 +243,35 @@ foreach(def ${STM32_PRJ_DEFS})
 endforeach()
 
 #setup flags
-set(CMAKE_C_FLAGS "${STM32_PRJ_CFLAGS} ${OPT} -Wall -fdata-sections -ffunction-sections -std=c99 -g -gdwarf-2 ${USER_CFLAGS}")
+set(CMAKE_C_FLAGS "${STM32_PRJ_CFLAGS} ${OPT} -lm -lc -MD -MP -MF -Wall -fdata-sections -ffunction-sections -std=c99 -g -gdwarf-2 ${USER_CFLAGS}")
 set(LDSCRIPT "-T${STM32_PRJ_LD_SCRIPT}")
-set(LINKER_FLAGS "-specs=nosys.specs ${LDSCRIPT} -lc -lm -lnosys -Wl,--gc-sections ${USER_LINKER_FLAGS}")
+set(LINKER_FLAGS "-lm ${STM32_PRJ_CFLAGS} -specs=nosys.specs ${LDSCRIPT} -fno-math-errno -lc -lgcc  -Wl,--gc-sections ${USER_LINKER_FLAGS}")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 
 SET(TARGET ${CMAKE_PROJECT_NAME})
 
+
+
 #setup targets
 get_directory_property(C_DEFS COMPILE_DEFINITIONS)
 #.elf
 add_executable(${TARGET}.elf ${SRC} ${asm_SRC})
+
+FOREACH(iss ${libs})
+  IF(NOT ${iss} EQUAL "")
+    target_link_libraries (${TARGET}.elf LINK_PUBLIC ${iss})
+  ENDIF()
+ENDFOREACH()
+
 #print size
 add_custom_command(TARGET ${TARGET}.elf POST_BUILD COMMAND ${CMAKE_SIZE} ${TARGET}.elf)
 
 #other
-ADD_CUSTOM_TARGET(${TARGET}.hex DEPENDS ${TARGET}.elf COMMAND ${CMAKE_OBJCOPY} -Oihex ${TARGET} ${TARGET}.hex)
-ADD_CUSTOM_TARGET(${TARGET}.bin DEPENDS ${TARGET}.elf COMMAND ${CMAKE_OBJCOPY} -Obinary ${TARGET} ${TARGET}.bin)
+ADD_CUSTOM_TARGET(${TARGET}.hex DEPENDS ${TARGET}.elf COMMAND ${CMAKE_OBJCOPY} -Oihex ${TARGET}.elf ${TARGET}.hex)
+ADD_CUSTOM_TARGET(${TARGET}.bin DEPENDS ${TARGET}.elf COMMAND ${CMAKE_OBJCOPY} -Obinary ${TARGET}.elf ${TARGET}.bin)
+
+#QtCreator does not show .h header files by default so it is required
+#to add a custom target for them in the cmakelist.
+FILE(GLOB_RECURSE LibFiles "*.h")
+add_custom_target(headers SOURCES ${LibFiles})
