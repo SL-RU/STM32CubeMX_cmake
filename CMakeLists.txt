@@ -40,7 +40,7 @@ cmake_minimum_required (VERSION 2.6)
 
 #USER CUSTOM SETTINGS
 #You can change values here. It's not recommended to change whole script
-set(OPT "-O0")
+set(OPT "-O3")
 set(USER_LINKER_FLAGS "-u _printf_float")
 set(USER_CFLAGS "")
 set(USER_COMPILER "Clang") # "Clang" or "GNU"
