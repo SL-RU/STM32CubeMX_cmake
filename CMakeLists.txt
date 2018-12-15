@@ -73,6 +73,10 @@ foreach(i ${cubemx_conf})
   message(${i})
 endforeach()
 
+#read IGNORE file and make list from it
+file (STRINGS "CMakeIgnore.txt" CMAKE_IGNORE)
+STRING(REGEX REPLACE "\n" ";" CMAKE_IGNORE "${CMAKE_IGNORE}")
+
 list(GET cubemx_conf 0 STM32_PRJ_NAME     )
 list(GET cubemx_conf 1 STM32_PRJ_CFLAGS   )
 list(GET cubemx_conf 2 STM32_PRJ_DEFS     )
@@ -93,8 +97,9 @@ string(REPLACE "\n" "" STM32_PRJ_LD_SCRIPT ${STM32_PRJ_LD_SCRIPT})
 set(STM32_PRJ_LD_SCRIPT "${cubemx_dir}/${STM32_PRJ_LD_SCRIPT}")
 
 if(POLICY CMP0012)
-    cmake_policy(SET CMP0012 NEW)
+  cmake_policy(SET CMP0012 NEW)
 endif()
+cmake_policy(SET CMP0057 NEW)
 
 project(${STM32_PRJ_NAME})
 set(CMAKE_C_COMPILER_ID ${USER_COMPILER})
@@ -120,7 +125,6 @@ ENDMACRO()
 
 #HEADERS
 header_directories(INC)
-#set(INC "${INC};/usr/lib/gcc/arm-none-eabi/7.2.0/include;/usr/lib/gcc/arm-none-eabi/7.2.0/include-fixed;/usr/arm-none-eabi/include/")
 include_directories(${INC})
 
 #SOURCES
@@ -141,6 +145,10 @@ endforeach()
 message("SOURCES: ")
 foreach(f ${SRC})
   message(${f})
+  if (${f} IN_LIST CMAKE_IGNORE)
+    list(REMOVE_ITEM SRC ${f})
+    message("Ignored!")
+  endif()
 endforeach()
 message("DEFINITIONS: ")
 foreach(def ${STM32_PRJ_DEFS})
