@@ -27,6 +27,8 @@ mcu_regex_to_cflags_dict = {
 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
     'STM32(F|L)7': '-mthumb -mcpu=cortex-m7 \
 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
+    'STM32H7': '-mthumb -mcpu=cortex-m7 \
+-mfpu=fpv5-d16 -mfloat-abi=hard',
 }
 
 
