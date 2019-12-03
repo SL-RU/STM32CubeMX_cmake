@@ -3,12 +3,11 @@
 - cmake > 2.6
 - arm-none-eabi-gdb
 - clang
-- python3
 
 ### HOWTO
 
-1) Create STM32cubeMX SW4STM32 project.
-2) Copy this CMakeLists.txt & CubeMX2_cmake.py in folder with created project.
+1) Create STM32cubeMX Makefile project.
+2) Copy this CMakeLists.txt & CMakeIgnore.txt & CMakeSetCompiler.txt in folder with created project.
 3) Execute: "mkdir build; cd build"
 4) Execute: "cmake ../; make"
 5) DONE
@@ -27,9 +26,6 @@ with lines:
   __ASM volatile ("VMSR fpscr, %0" : : "r" (fpscr) : "vfpcc");
 #endif
 ```
-
-
-CubeMX2_cmake.py based on baoshi's CubeMX2Makefile https://github.com/baoshi/CubeMX2Makefile
 
 
 LICENSE
