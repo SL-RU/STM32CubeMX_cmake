@@ -39,7 +39,7 @@ cmake_minimum_required (VERSION 2.6)
 set(OPT "-O3")
 set(USER_LINKER_FLAGS "-u _printf_float -Wl,--print-memory-usage")
 set(USER_CFLAGS "")
-set(USER_COMPILER "GNU") # "Clang" or "GNU"
+set(USER_COMPILER "Clang") # "Clang" or "GNU"
 set(USER_DEBUG TRUE) # Or "False"
 set(USER_INC "")
 
@@ -93,7 +93,7 @@ endfunction()
 ReadVariables("Makefile")
 
 set(STM32_PRJ_NAME      ${MK_TARGET})
-set(STM32_PRJ_CFLAGS    "${MK_CPU} -mthumb ${MK_FPU} ${MK_FLOAT-ABI} ${USER_CFLAGS} ${OPT} -Wall -fdata-sections -ffunction-sections")
+set(STM32_PRJ_CFLAGS    "${MK_CPU} -mthumb ${MK_FPU} ${MK_FLOAT-ABI} ${USER_CFLAGS} ${OPT} -Wall -fdata-sections -ffunction-sections -dM -fno-common -fshort-enums")
 set(STM32_PRJ_DEFS      "${MK_C_DEFS}")
 set(STM32_PRJ_MCU       ${MK_MCU})
 set(STM32_PRJ_LD_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/${MK_LDSCRIPT}")
@@ -179,6 +179,7 @@ string(REPLACE " " ";" MK_C_SOURCES ${MK_C_SOURCES})
 set(SRC "${SRC};${MK_C_SOURCES}")
 list(REMOVE_DUPLICATES SRC)
 
+
 #ASSEMBLER from Makefile
 string(REPLACE " " ";" MK_ASM_SOURCES ${MK_ASM_SOURCES})
 set(ASM_SRC "${ASM_SRC};${MK_ASM_SOURCES}")
@@ -204,12 +205,16 @@ message("${STM32_PRJ_DEFS}")
 
 #setup flags
 set(CMAKE_C_FLAGS_WARN "-dM -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -fshort-enums -Wno-parentheses-equality -Wno-unknown-attributes")
-set(CMAKE_C_FLAGS "${EXTERN_C_FLAGS} ${STM32_PRJ_CFLAGS}")
-set(CMAKE_CXX_FLAGS "${EXTERN_CXX_FLAGS} ${STM32_PRJ_CFLAGS}")
-set(CMAKE_ASM_FLAGS "-x assembler-with-cpp ${CMAKE_C_FLAGS}")
+set(CMAKE_C_FLAGS "${STM32_PRJ_CFLAGS} ${EXTERN_C_FLAGS} --target=arm-none-eabi")
+set(CMAKE_CXX_FLAGS "${STM32_PRJ_CFLAGS} ${EXTERN_CXX_FLAGS} --target=arm-none-eabi")
+set(CMAKE_ASM_FLAGS "-x assembler-with-cpp ${STM32_PRJ_CFLAGS}")
 set(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g -gdwarf-2")
 
-set(CMAKE_EXE_LINKER_FLAGS "-specs=nosys.specs -T${STM32_PRJ_LD_SCRIPT} ${MK_LIBS} -Wl,--gc-sections ${USER_LINKER_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "-specs=nosys.specs -T${STM32_PRJ_LD_SCRIPT} ${MK_LIBS} -Wl,--gc-sections ${USER_LINKER_FLAGS} ${STM32_PRJ_CFLAGS}")
+#set(CMAKE_MODULE_LINKER_FLAGS "")
+#set(CMAKE_SHARED_LINKER_FLAGS "")
+#set(CMAKE_STATIC_LINKER_FLAGS "")
+
 
 SET(TARGET ${CMAKE_PROJECT_NAME})
 

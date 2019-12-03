@@ -125,12 +125,13 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
   GET_GCC_INCLUDE_PATH(FALSE ${CROSS_COMPILE_GCC} CROSS_COMPILE_GCC_C_INCLUDE_PATH)
   GET_GCC_INCLUDE_PATH(TRUE ${CROSS_COMPILE_GCC} CROSS_COMPILE_GCC_CXX_INCLUDE_PATH)
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -target arm-none-eabi ${CROSS_COMPILE_GCC_C_INCLUDE_PATH}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -target arm-none-eabi ${CROSS_COMPILE_GCC_CXX_INCLUDE_PATH}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
   set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
-  set(EXTERN_C_FLAGS "-target arm-none-eabi")
-  set(EXTERN_CXX_FLAGS "-target arm-none-eabi")
+  
+  set(EXTERN_C_FLAGS " ${CROSS_COMPILE_GCC_C_INCLUDE_PATH}")
+  set(EXTERN_CXX_FLAGS "${CROSS_COMPILE_GCC_CXX_INCLUDE_PATH}")
   # Prevent the warning related to non supported function attribute - see: https://sourceware.org/ml/newlib/2015/msg00714.html
 else()
   message(FATAL_ERROR "${CMAKE_C_COMPILER_ID} Toolchain not supported")
