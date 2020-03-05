@@ -36,12 +36,17 @@
 # 5) DONE
 cmake_minimum_required (VERSION 2.6)
 
-set(OPT "-O3")
+# USER REGION BEGIN
+set(OPT "-O0")
 set(USER_LINKER_FLAGS "-u _printf_float -Wl,--print-memory-usage")
 set(USER_CFLAGS "")
 set(USER_COMPILER "Clang") # "Clang" or "GNU"
 set(USER_DEBUG TRUE) # Or "False"
 set(USER_INC "")
+set(USER_SRC "")
+
+# USER REGION END
+
 
 # Enable some policies
 if(POLICY CMP0007)
@@ -160,6 +165,12 @@ foreach(f ${ASM_SRC})
 endforeach()
 
 #DEFENITIONS
+macro(TIME RESULT)
+  execute_process(COMMAND "date" "+%y%m%d%H%M" OUTPUT_VARIABLE ${RESULT})
+endmacro()
+TIME(VVERSION)
+string(REPLACE "\n" "" VVERSION ${VVERSION})
+add_definitions(-DVERSION="${VVERSION}")
 
 set(STM32_PRJ_DEFS "${STM32_PRJ_DEFS}")
 add_definitions("${STM32_PRJ_DEFS}")
@@ -220,7 +231,7 @@ SET(TARGET ${CMAKE_PROJECT_NAME})
 
 #setup targets
 #.elf
-add_executable(${TARGET}.elf ${SRC} ${ASM_SRC})
+add_executable(${TARGET}.elf ${SRC} ${ASM_SRC} ${USER_SRC})
 #print size
 add_custom_command(TARGET ${TARGET}.elf POST_BUILD COMMAND ${CMAKE_SIZE} --common ${TARGET}.elf)
 #make .hex & .bin
