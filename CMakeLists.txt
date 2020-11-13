@@ -98,7 +98,7 @@ endfunction()
 ReadVariables("Makefile")
 
 set(STM32_PRJ_NAME      ${MK_TARGET})
-set(STM32_PRJ_CFLAGS    "${MK_CPU} -mthumb ${MK_FPU} ${MK_FLOAT-ABI} ${USER_CFLAGS} ${OPT} -Wall -fdata-sections -ffunction-sections -dM -fno-common -fshort-enums")
+set(STM32_PRJ_CFLAGS    "${MK_CPU} -mthumb ${MK_FPU} ${MK_FLOAT-ABI} ${USER_CFLAGS} ${OPT} -Wall -fdata-sections -ffunction-sections -dM -fno-common")
 set(STM32_PRJ_DEFS      "${MK_C_DEFS}")
 set(STM32_PRJ_MCU       ${MK_MCU})
 set(STM32_PRJ_LD_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/${MK_LDSCRIPT}")
@@ -215,7 +215,7 @@ message("DEFINITIONS: ")
 message("${STM32_PRJ_DEFS}")
 
 #setup flags
-set(CMAKE_C_FLAGS_WARN "-dM -fno-common -Wall -ffunction-sections -fdata-sections -fomit-frame-pointer -fshort-enums")
+set(CMAKE_C_FLAGS_WARN "-dM -fno-common -Wall -ffunction-sections -fdata-sections -fomit-frame-pointer")
 set(CMAKE_C_FLAGS "${STM32_PRJ_CFLAGS} ${EXTERN_C_FLAGS} --target=arm-none-eabi")
 set(CMAKE_CXX_FLAGS "${STM32_PRJ_CFLAGS} ${EXTERN_CXX_FLAGS} --target=arm-none-eabi")
 set(CMAKE_ASM_FLAGS "-x assembler-with-cpp ${STM32_PRJ_CFLAGS}")
