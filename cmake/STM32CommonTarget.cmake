@@ -1,0 +1,29 @@
+macro(ADD_STM32_COMMON_TARGET)
+  ADD_EXECUTABLE_FROM_MAKEFILE("Makefile")
+  GLOB_SOURCES("${CMAKE_CURRENT_LIST_DIR}" "${TARGET}" "${SRC}" "${ASM_SRC}" "${INC}")
+
+  target_compile_definitions(${TARGET} PUBLIC
+    -DVERSION="${VVERSION}"
+    -DVERSION_INT=${IVERSION}
+    )
+
+  target_compile_options(${TARGET} BEFORE PRIVATE
+    $<$<COMPILE_LANGUAGE:C>: ${STM32_C_COMMON_FLAGS} ${EXTERN_C_FLAGS} ${CMAKE_C_FLAGS}>)
+  target_link_options(${TARGET} PRIVATE -T${STM32_PRJ_LD_SCRIPT} ${STM32_PRJ_CFLAGS} ${STM32_LINK_COMMON_FLAGS} -Wl,-Map=${TARGET}.map)
+
+  #print size
+  add_custom_command(TARGET ${TARGET} 
+    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    POST_BUILD COMMAND ${CMAKE_SIZE} --common ${TARGET})
+  #make .hex & .bin
+  add_custom_target(${STM32_PRJ_NAME}.hex
+    DEPENDS ${TARGET}
+    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    COMMENT "Generating ${STM32_PRJ_NAME}.hex from ${TARGET}"
+    COMMAND ${CMAKE_OBJCOPY} -Oihex ${TARGET} ${STM32_PRJ_NAME}.hex)
+  add_custom_target(${STM32_PRJ_NAME}.bin
+    DEPENDS ${TARGET}
+    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    COMMENT "Generating ${STM32_PRJ_NAME}.bin from ${TARGET}"
+    COMMAND ${CMAKE_OBJCOPY} -Obinary ${TARGET} ${STM32_PRJ_NAME}.bin)
+endmacro()

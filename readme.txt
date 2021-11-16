@@ -1,25 +1,33 @@
 Requirements:
-- cmake > 2.6                                                                   
-- arm-none-eabi-gdb                                                             
-- python3                                                                       
+- CMake > 3.2
+- arm-none-eabi-gcc
+- arm-none-eabi-gdb
+- Clang
+- Ninja (optional)
 
 
-HOWTO:                                                                        
-1) Create STM32cubeMX SW4STM32 project.                                       
-2) Copy this CMakeLists.txt & CubeMX2_cmake.py in folder with created project.
-3) Execute: "mkdir build; cd build"                                           
-4) Execute: "cmake ../; make"                                                 
-5) DONE                                                                       
+HOWTO:
+1) Create STM32CubeMX. Set in "Project manager"->"Toolchain / IDE" to "Makefile". Set in "Project manager"->"Code Generator" "Copy only necessary library files".
+2) Copy this "CMakeLists.txt" & "CMakeIgnore.txt" & "cmake" folder to folder with created project.
+3) Execute: "mkdir build; cd build"
+4) Execute: "cmake .. -DCMAKE_BUILD_TYPE=Debug; cmake --build ."
+5) DONE
 
+To set Debug compilation type:
+cmake .. -DCMAKE_BUILD_TYPE=Debug
 
-CubeMX2_cmake.py based on baoshi's CubeMX2Makefile https://github.com/baoshi/CubeMX2Makefile
+To set Release compilation type:
+cmake .. -DCMAKE_BUILD_TYPE=Release
+
+To set Debug compilation type and ninja(instead make):
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug 
 
 
 LICENSE
 
     BSD 2-Clause License
                                                                                   
-    Copyright (c) 2017, Alexander Lutsai <s.lyra@ya.ru>                           
+    Copyright (c) 2017, Alexander Lutsai <s.lyra@ya.ru>
     All rights reserved.                                                          
                                                                                   
     Redistribution and use in source and binary forms, with or without            

@@ -1,6 +1,2 @@
 CMakeFiles
-startup
 build
-Drivers
-Middlewares
-Inc
